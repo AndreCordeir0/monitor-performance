@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"gioui.org/app"
@@ -14,8 +16,13 @@ import (
 )
 
 var processorPercentage string = ""
+var monitorInfo *monitor.Monitor
 
 func main() {
+	monitorInfo = &monitor.Monitor{
+		RamUsage: "0",
+		CpuUsage: "0",
+	}
 
 	go func() {
 		window := new(app.Window)
@@ -25,7 +32,9 @@ func main() {
 			for {
 				<-t.C
 				p, err := monitor.GetProcessorUsePercentage()
-				processorPercentage = p
+				p = strings.TrimSpace(p)
+				texto := fmt.Sprintf("CPU %s%s", p, "%")
+				monitorInfo.CpuUsage = texto
 				if err != nil {
 					os.Exit(1)
 				}
@@ -59,8 +68,7 @@ func run(window *app.Window) error {
 
 func createScreen(theme *material.Theme, ops *op.Ops, e app.FrameEvent) {
 	gtx := app.NewContext(ops, e)
-
-	text2 := material.H5(theme, processorPercentage)
+	text2 := material.H5(theme, monitorInfo.CpuUsage)
 	// text.Font =
 	text2.Color = color.NRGBA{
 		R: 250,
@@ -71,7 +79,6 @@ func createScreen(theme *material.Theme, ops *op.Ops, e app.FrameEvent) {
 	text2.Alignment = text.Middle
 
 	// button.CornerRadius = unit.Dp(5)
-
 	text2.Layout(gtx)
 	e.Frame(gtx.Ops)
 }
